@@ -39,8 +39,19 @@ void ISRwatchdog(){
 //WiFiClient client;
 
 
+IPAddress staticIP(192, 168, 1, 223);
+IPAddress gateway(192, 168, 1, 1);
+IPAddress subnet(255, 255, 255, 0);
+IPAddress dns(192, 168, 1, 1);
+
+
 void setup() {
   Serial.begin(112500);
+
+  if (WiFi.config(staticIP, gateway, subnet, dns, dns) == false) {
+    Serial.println("WiFi Configuration failed.");
+  }
+
   Serial.print("Connected to ");
   Serial.println(WIFI_SSID);
   WiFi.mode(WIFI_STA);
