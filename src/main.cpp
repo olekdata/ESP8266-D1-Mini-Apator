@@ -164,6 +164,11 @@ void loop() {
       } else {
         Serial.println("nie wysłana");
       }
+
+      for (int j=0; j<4; ++j) { sprintf(mqttTopicValBuf+2*j, "%02X", frame[40+j]);}
+      mqttTopicValBuf[8] = 0;
+      sprintf(mqttTopicMsgBuf, "%s/%s_x", MQTT_PREFIX, dll_id);
+      mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf);
     }
     else {
       Serial.println("Ramka zła");
@@ -179,7 +184,7 @@ void loop() {
 //    Serial.print("+");
     if ((sec % 60) == 0) {
       sprintf(mqttTopicMsgBuf, "%s/Live", MQTT_PREFIX);
-      sprintf(mqttTopicValBuf, "%d;%d", sec/60,f_count);
+      sprintf(mqttTopicValBuf, "%d;%d - %s", sec/60,f_count, __TIMESTAMP__);
       mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf);
     }
   }
