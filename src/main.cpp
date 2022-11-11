@@ -23,6 +23,8 @@ comfoair::MQTT *mqtt;
 
 uint8_t MBpacket[291];
 
+#define 	BUILDTIME "2022-11-11 10:00"
+
 AsyncWebServer server(80);
 
 
@@ -35,8 +37,6 @@ void ISRwatchdog(){
       ESP.reset();
   }
 }
-
-//WiFiClient client;
 
 
 IPAddress staticIP(192, 168, 1, 223);
@@ -66,13 +66,13 @@ void setup() {
   }
 
   Serial.println("");
-  //Serial.print("Connected to ");
-  //Serial.println(WIFI_SSID);
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
   server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(200, "text/plain", "Hi! I am ESP8266 Apator");
+    char s[60];
+    sprintf(s, "Hi! I am ESP8266 Apator (%s)", BUILDTIME);
+    request->send(200, "text/plain", s);
   });
 
   AsyncElegantOTA.begin(&server);    // Start AsyncElegantOTA
@@ -85,7 +85,6 @@ void setup() {
 
   mqtt = new comfoair::MQTT();
   mqtt->setup();
-//  ESP.wdtEnable(1000*60*5);
   secondTick.attach(60, ISRwatchdog);
 }
 
@@ -96,12 +95,10 @@ char buff[200];
 
 unsigned int sec = 0;
 unsigned int f_count = 0;
-//int wdt_count = 0;
 
 
 
 void loop() {
-  //server.
   if (rf_mbus_task(MBpacket)) {
 
     printf("\n");
@@ -109,20 +106,8 @@ void loop() {
     
     std::vector<uchar> frame(MBpacket, MBpacket+lenWithoutCrc);
     std::string sf = bin2hex(frame);
-    ///Serial.print("frame ="); Serial.println(sf.c_str());
     Serial.printf("frame = %s\n", sf.c_str());
-/*
-    dumpHex(MBpacket+3, 4, dll_id, true);
 
-  for (uint8_t i = 0; i < len; i++) {
-    uint8_t j = i;
-    if (revert) 
-      j = len-i;
-    sprintf(buffHex, "%02X", data[j]);
-     strcpy(buff, buffHex);
-     buff += 2;
-  }
-*/
     char dll_id[9];
     sprintf(dll_id + 0, "%02X", frame[7]);
     sprintf(dll_id + 2, "%02X", frame[6]);
@@ -144,31 +129,38 @@ void loop() {
     int num_encrypted_bytes = 0;
     int num_not_encrypted_at_end = 0;
     if (decrypt_TPL_AES_CBC_IV(frame, pos, key, iv, &num_encrypted_bytes, &num_not_encrypted_at_end)) {
-      int i;
-      memcpy(&i, &frame[40], 4);
-      Serial.printf("value=%d\n",i);
-      if ((i > 0) and (i/1000 < 10000)  ) {
-        Serial.print("Ramka OK ");
-        sprintf(mqttTopicMsgBuf, "%s/%s", MQTT_PREFIX, dll_id);
-      } else {
-        Serial.print("Ramka zła wartość ");
-        sprintf(mqttTopicMsgBuf, "%s/%s_", MQTT_PREFIX, dll_id);
-      };
-      
-      sprintf(mqttTopicValBuf, "%d.%d", i / 1000, i % 1000);
-      if (mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf)) {
-        Serial.println("wysłana");
-        ++f_count;
-        //wdt_count = 0;
-        watchdogCount = 0;
-      } else {
-        Serial.println("nie wysłana");
+      std::vector<uchar>::iterator fv;
+      fv = std::find(pos, frame.end(), 0x10);
+      if (fv != frame.end()){
+        int v;
+        memcpy(&v, &fv[1], 4);
+        Serial.printf("value=%d, pos-%d\n",v, fv-frame.begin());
+        if ((v > 0) and (v/1000 < 10000)  ) {
+          Serial.print("Ramka OK ");
+          sprintf(mqttTopicMsgBuf, "%s/%s", MQTT_PREFIX, dll_id);
+        } else {
+          Serial.print("Ramka zła wartość ");
+          sprintf(mqttTopicMsgBuf, "%s/%s_", MQTT_PREFIX, dll_id);
+        };
+     
+        sprintf(mqttTopicValBuf, "%d.%03d", v / 1000, v % 1000);
+        if (mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf)) {
+          Serial.println("wysłana");
+          ++f_count;
+          watchdogCount = 0;
+        } else {
+          Serial.println("nie wysłana");
+        }
       }
-
+      else {
+          Serial.println("brak x10");
+      }
+/*
       for (int j=0; j<4; ++j) { sprintf(mqttTopicValBuf+2*j, "%02X", frame[40+j]);}
       mqttTopicValBuf[8] = 0;
       sprintf(mqttTopicMsgBuf, "%s/%s_x", MQTT_PREFIX, dll_id);
       mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf);
+*/      
     }
     else {
       Serial.println("Ramka zła");
@@ -184,13 +176,9 @@ void loop() {
 //    Serial.print("+");
     if ((sec % 60) == 0) {
       sprintf(mqttTopicMsgBuf, "%s/Live", MQTT_PREFIX);
-      sprintf(mqttTopicValBuf, "%d;%d - %s", sec/60,f_count, __TIMESTAMP__);
+      sprintf(mqttTopicValBuf, "%d;%d - %s ", sec/60,f_count, BUILDTIME);
       mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf);
     }
   }
-
-  //mqtt->loop();
-
-
 }
 
