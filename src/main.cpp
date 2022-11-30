@@ -1,6 +1,5 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include "secrets.h"
 #include <ESP8266WiFi.h>
 #include "rf_mbus.hpp"
 #include "crc.hpp"
@@ -19,6 +18,16 @@
 #include <AsyncElegantOTA.h>
 #include <Ticker.h>
 
+#include "secrets.h"
+/*
+#define WIFI_SSID     ""
+#define WIFI_PASS     ""
+#define MQTT_PREFIX   ""
+#define MQTT_HOST     ""
+#define MQTT_PORT     1883
+#define MQTT_USER     ""
+#define MQTT_PASS     ""
+*/
 comfoair::MQTT *mqtt;
 
 uint8_t MBpacket[291];
