@@ -5,7 +5,6 @@
 #include <PubSubClient.h>
 #include <map>
 
-namespace comfoair {
   class MQTT {
     public:
       MQTT();
@@ -20,6 +19,5 @@ namespace comfoair {
       void subscribeToTopics();
       void ensureConnected();
   };
-}
 
 #endif

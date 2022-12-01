@@ -7,8 +7,6 @@
 #include <string>
 
 
-namespace comfoair {
-
 WiFiClient wifiClient;
   MQTT::MQTT() {
     this->client = PubSubClient(wifiClient);
@@ -77,4 +75,3 @@ WiFiClient wifiClient;
     }
   }
 
-} // namespace comfoair

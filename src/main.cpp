@@ -28,7 +28,7 @@
 #define MQTT_USER     ""
 #define MQTT_PASS     ""
 */
-comfoair::MQTT *mqtt;
+MQTT *mqtt;
 
 uint8_t MBpacket[291];
 
@@ -92,7 +92,7 @@ void setup() {
   
   rf_mbus_init();
 
-  mqtt = new comfoair::MQTT();
+  mqtt = new MQTT();
   mqtt->setup();
   secondTick.attach(60, ISRwatchdog);
 }
@@ -164,12 +164,6 @@ void loop() {
       else {
           Serial.println("brak x10");
       }
-/*
-      for (int j=0; j<4; ++j) { sprintf(mqttTopicValBuf+2*j, "%02X", frame[40+j]);}
-      mqttTopicValBuf[8] = 0;
-      sprintf(mqttTopicMsgBuf, "%s/%s_x", MQTT_PREFIX, dll_id);
-      mqtt->writeToTopic(mqttTopicMsgBuf, mqttTopicValBuf);
-*/      
     }
     else {
       Serial.println("Ramka zła");
