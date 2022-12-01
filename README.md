@@ -5,4 +5,4 @@ https://github.com/maciekn/izar_mbus_reader
 https://github.com/weetmuts/wmbusmeters
 
 
-koniec4
+koniec5
