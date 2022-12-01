@@ -19,8 +19,6 @@
 #define WMBUS_UTILS_H
 
 #include "util.h"
-//#include "threads.h"
-//#include "wmbus.h"
 
 namespace std
 {
